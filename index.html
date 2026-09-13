@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>John Video Clips and Downloading - HD Downloader & Smart Clip Studio</title>
+  <meta name="description" content="Download videos from YouTube, TikTok, Instagram & all platforms in original quality. Upload and slice videos into 10s, 15s, or custom clips with zero quality loss. Mobile supported.">
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- JSZip for ZIP File Downloads -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient Background Glows -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <!-- Header & Navigation -->
+  <header class="app-header">
+    <div class="container header-content">
+      <div class="brand-badge">
+        <div class="brand-logo-frame">
+          <img src="logo.png" alt="John Video Clips Logo" class="brand-logo-img">
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">John Video Clips <span>& Downloading</span></h1>
+          <p class="brand-tagline">15s/10s Instant Slicing • Original HD Quality • Zip Export</p>
+        </div>
+      </div>
+
+      <nav class="nav-tabs" id="navTabs">
+        <button class="nav-tab active" data-tab="downloader" id="tabDownloader">
+          <i data-lucide="download-cloud"></i>
+          <span>Downloader</span>
+        </button>
+        <button class="nav-tab" data-tab="clipper" id="tabClipper">
+          <i data-lucide="film"></i>
+          <span>Clipper Studio</span>
+          <span class="badge-pulse" id="clipperActiveBadge" style="display: none;">Ready</span>
+        </button>
+        <button class="nav-tab" data-tab="gallery" id="tabGallery">
+          <i data-lucide="sparkles"></i>
+          <span>Clips Gallery</span>
+          <span class="badge-count" id="clipsCountBadge">0</span>
+        </button>
+        <button class="nav-tab" data-tab="upcoming" id="tabUpcoming">
+          <i data-lucide="rocket"></i>
+          <span>Upcoming</span>
+          <span class="badge-new">Next Gen</span>
+        </button>
+        <button class="nav-tab" data-tab="admin" id="tabAdmin" style="display: none;">
+          <i data-lucide="shield-check"></i>
+          <span>Admin Panel</span>
+          <span class="badge-gold">Admin</span>
+        </button>
+      </nav>
+
+      <!-- User Auth State in Header -->
+      <div class="header-auth-section">
+        <!-- When Logged Out -->
+        <div id="userLoggedOutView" class="auth-pill-loggedout">
+          <button class="btn-auth-signin" id="btnOpenAuthModal">
+            <i data-lucide="user"></i>
+            <span>Sign In / Register</span>
+          </button>
+        </div>
+
+        <!-- When Logged In -->
+        <div id="userLoggedInView" class="user-profile-chip" style="display: none;">
+          <img id="userAvatarImg" src="https://api.dicebear.com/7.x/bottts/svg?seed=creator" alt="Avatar" class="user-avatar-round">
+          <div class="user-details">
+            <span class="user-name" id="userNameDisplay">Creator</span>
+            <span class="user-email" id="userEmailDisplay"></span>
+          </div>
+          <button class="btn-logout-icon" id="btnLogout" title="Logout">
+            <i data-lucide="log-out"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Lock Notice Banner (shown when downloads are locked) -->
+  <div id="lockNoticeBanner" class="lock-notice-banner">
+    <div class="container lock-banner-content">
+      <div class="lock-banner-left">
+        <span class="lock-icon-circle"><i data-lucide="shield-alert"></i></span>
+        <div class="lock-banner-text-group">
+          <strong>Downloads Locked:</strong> <span>Sign in with your account or instant 1-click demo to unlock original quality HD video downloads & clip exports.</span>
+        </div>
+      </div>
+      <button class="btn-unlock-pill" onclick="window.openAuthModal('Unlock Downloads')">
+        <i data-lucide="key-round"></i>
+        <span>Unlock Downloads</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <main class="container main-layout">
+
+    <!-- TAB 1: VIDEO DOWNLOADER -->
+    <section class="tab-pane active" id="paneDownloader">
+      <div class="hero-card glass-panel">
+        <div class="hero-header">
+          <span class="pill-badge glow-cyan">
+            <i data-lucide="zap"></i> Multi-Platform HD Downloader
+          </span>
+          <h2 class="hero-title">Download Any Video in <span class="gradient-text">Original Quality</span></h2>
+          <p class="hero-desc">Paste links from YouTube, TikTok, Instagram Reels, Twitter/X, Facebook or any direct video link. Save full videos or send directly to the clipper.</p>
+        </div>
+
+        <!-- Platform Badges -->
+        <div class="platform-bar">
+          <span class="platform-chip active"><i data-lucide="youtube"></i> YouTube</span>
+          <span class="platform-chip active"><i data-lucide="instagram"></i> Instagram</span>
+          <span class="platform-chip active"><i data-lucide="video"></i> TikTok</span>
+          <span class="platform-chip active"><i data-lucide="twitter"></i> X / Twitter</span>
+          <span class="platform-chip active"><i data-lucide="facebook"></i> Facebook</span>
+          <span class="platform-chip active"><i data-lucide="globe"></i> Web URL</span>
+        </div>
+
+        <!-- URL Input Form -->
+        <div class="url-input-container">
+          <div class="input-glow-box">
+            <i data-lucide="link" class="input-icon"></i>
+            <input 
+              type="text" 
+              id="videoUrlInput" 
+              class="glow-input" 
+              placeholder="Paste YouTube, TikTok, Instagram, or direct video URL here..."
+              autocomplete="off"
+            >
+            <button class="btn-paste" id="btnPasteUrl" title="Paste from Clipboard">
+              <i data-lucide="clipboard"></i>
+              <span>Paste</span>
+            </button>
+          </div>
+
+          <div class="download-controls-row">
+            <div class="quality-selector-wrapper">
+              <label for="downloadQualitySelect" class="input-label">
+                <i data-lucide="sliders"></i> Target Quality:
+              </label>
+              <select id="downloadQualitySelect" class="custom-select">
+                <option value="original">Original Source Quality (Lossless)</option>
+                <option value="4k">4K Ultra HD (2160p)</option>
+                <option value="1080p" selected>Full HD (1080p 60fps)</option>
+                <option value="720p">High Definition (720p)</option>
+                <option value="mp3">Audio Only (MP3 320kbps)</option>
+              </select>
+            </div>
+
+            <button class="btn-primary" id="btnProcessUrl">
+              <i data-lucide="search"></i>
+              <span>Fetch Video</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Download Status & Active Card -->
+        <div class="fetch-result-card" id="fetchResultCard" style="display: none;">
+          <div class="result-media-col">
+            <div class="result-thumb-wrapper">
+              <img id="resultThumb" src="" alt="Video Thumbnail">
+              <span class="result-duration-badge" id="resultDuration">00:00</span>
+              <span class="result-quality-badge" id="resultQualityBadge">1080p</span>
+            </div>
+          </div>
+          <div class="result-info-col">
+            <h3 class="result-title" id="resultTitle">Sample Video Title</h3>
+            <p class="result-platform" id="resultPlatform"><i data-lucide="youtube"></i> YouTube Video</p>
+            
+            <div class="quality-pill-row">
+              <span class="tag-pill"><i data-lucide="shield-check"></i> Original Bitrate</span>
+              <span class="tag-pill"><i data-lucide="file-video"></i> MP4 Format</span>
+              <span class="tag-pill" id="resultFileSize"><i data-lucide="hard-drive"></i> ~45 MB</span>
+            </div>
+
+            <div class="progress-bar-container" id="downloadProgressBarContainer" style="display: none;">
+              <div class="progress-info">
+                <span class="progress-label" id="downloadProgressLabel">Fetching media stream...</span>
+                <span class="progress-percent" id="downloadProgressPercent">0%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="downloadProgressFill"></div>
+              </div>
+            </div>
+
+            <div class="result-action-buttons">
+              <button class="btn-primary" id="btnSaveFullVideo">
+                <i data-lucide="download"></i>
+                <span>Download & Save Video</span>
+                <span class="download-lock-badge"><i data-lucide="lock"></i> Locked</span>
+              </button>
+              <button class="btn-gradient" id="btnSendToClipper">
+                <i data-lucide="scissors"></i>
+                <span>Send to Clipper Studio</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Test / Library Section -->
+      <div class="sample-library-section">
+        <div class="section-heading">
+          <div>
+            <h3 class="section-title">Quick Test Videos (Ready for 10s/15s Clips)</h3>
+            <p class="section-sub">Select any sample to download or slice immediately without uploading.</p>
+          </div>
+          <span class="badge-pill">4 Samples Available</span>
+        </div>
+
+        <div class="sample-grid" id="sampleVideosGrid">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: VIDEO CLIPPER STUDIO -->
+    <section class="tab-pane" id="paneClipper">
+      <div class="clipper-workspace">
+        
+        <!-- Upload Zone / Source Switcher -->
+        <div class="upload-dropzone glass-panel" id="uploadDropzone">
+          <input type="file" id="videoFileInput" accept="video/mp4,video/webm,video/quicktime,video/mkv" style="display: none;">
+          <div class="dropzone-content">
+            <div class="drop-icon-circle">
+              <i data-lucide="upload-cloud"></i>
+            </div>
+            <div class="drop-text-group">
+              <h3 class="drop-title">Upload Video to Create Clips</h3>
+              <p class="drop-sub">Drag & drop your video file here, or click to browse from your device</p>
+              <div class="supported-formats">
+                <span>MP4</span><span>WEBM</span><span>MOV</span><span>MKV</span>
+                <span class="highlight">Lossless 1080p / 4K</span>
+              </div>
+            </div>
+            <button class="btn-primary" id="btnBrowseFile">
+              <i data-lucide="folder"></i>
+              <span>Select File</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Clipper Studio Player (Hidden until video loaded) -->
+        <div class="clipper-studio-card glass-panel" id="clipperStudioCard" style="display: none;">
+          
+          <div class="studio-header">
+            <div class="studio-video-info">
+              <span class="status-indicator live"></span>
+              <h3 class="studio-title" id="studioVideoTitle">Active Video</h3>
+              <span class="resolution-badge" id="studioVideoRes">1080p</span>
+            </div>
+            <div class="studio-header-actions">
+              <button class="btn-sm btn-outline" id="btnChangeVideo">
+                <i data-lucide="refresh-cw"></i> Change Video
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Auto-Split Video Banner -->
+          <div class="auto-split-banner">
+            <div class="auto-split-info">
+              <i data-lucide="sparkles" class="sparkle-icon"></i>
+              <div>
+                <h4 class="auto-split-heading">⚡ Instant Auto-Split into All Consecutive Clips</h4>
+                <p class="auto-split-desc">Select clip length and split the entire video automatically with normal 1.0x playback speed.</p>
+              </div>
+            </div>
+            <div class="auto-split-controls">
+              <div class="split-len-picker">
+                <span class="split-len-label">Clip Length:</span>
+                <button class="split-len-btn" data-len="10">10s</button>
+                <button class="split-len-btn active" data-len="15">15s</button>
+                <button class="split-len-btn" data-len="30">30s</button>
+              </div>
+              <button class="btn-gradient-sm" id="btnQuickAutoSplit">
+                <i data-lucide="zap"></i>
+                <span id="quickAutoSplitLabel">Generate All 15s Clips Now</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Video Player Display -->
+          <div class="player-container" id="playerContainer">
+            <div class="video-frame-wrapper" id="videoFrameWrapper">
+              <video id="mainVideoPlayer" playsinline preload="auto"></video>
+              
+              <!-- Aspect Ratio Mask Overlay -->
+              <div class="aspect-ratio-mask" id="aspectRatioMask"></div>
+
+              <!-- Custom Video Overlays -->
+              <div class="player-overlay-play" id="overlayPlayBtn">
+                <i data-lucide="play"></i>
+              </div>
+            </div>
+
+            <!-- Player Quick Controls Bar -->
+            <div class="player-controls-bar">
+              <div class="playback-controls-left">
+                <button class="btn-icon" id="btnPlayPause" title="Play / Pause (Space)">
+                  <i data-lucide="play" id="playIcon"></i>
+                </button>
+                <button class="btn-icon" id="btnMuteToggle" title="Mute / Unmute">
+                  <i data-lucide="volume-2" id="volumeIcon"></i>
+                </button>
+                <div class="time-display">
+                  <span id="currentTimeDisplay">00:00</span> / <span id="totalTimeDisplay">00:00</span>
+                </div>
+              </div>
+
+              <div class="playback-controls-right">
+                <!-- Aspect Ratio Selector -->
+                <div class="aspect-ratio-selector">
+                  <button class="aspect-btn active" data-aspect="original" title="Original Ratio">16:9</button>
+                  <button class="aspect-btn" data-aspect="9:16" title="Shorts / Reels / TikTok (9:16)">9:16 Shorts</button>
+                  <button class="aspect-btn" data-aspect="1:1" title="Instagram Square (1:1)">1:1</button>
+                </div>
+                
+                <button class="btn-icon" id="btnFullscreen" title="Toggle Fullscreen">
+                  <i data-lucide="maximize"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- DURATION SELECTION & PRESETS -->
+          <div class="clipper-controls-section">
+            <div class="section-sub-header">
+              <label class="control-group-title">
+                <i data-lucide="clock"></i> Choose Clip Duration:
+              </label>
+              <span class="selected-duration-tag" id="selectedDurationTag">Selected: 15.0s</span>
+            </div>
+
+            <div class="duration-presets-bar">
+              <button class="preset-pill" data-duration="10" id="preset10s">
+                <i data-lucide="flame"></i>
+                <span>10 Seconds</span>
+              </button>
+              <button class="preset-pill active" data-duration="15" id="preset15s">
+                <i data-lucide="sparkles"></i>
+                <span>15 Seconds (Story/Reel)</span>
+              </button>
+              <button class="preset-pill" data-duration="30" id="preset30s">
+                <i data-lucide="zap"></i>
+                <span>30 Seconds</span>
+              </button>
+              <button class="preset-pill" data-duration="60" id="preset60s">
+                <i data-lucide="film"></i>
+                <span>60 Seconds</span>
+              </button>
+              <button class="preset-pill random-preset" data-duration="random" id="presetRandom">
+                <i data-lucide="shuffle"></i>
+                <span>Random Duration</span>
+              </button>
+              <button class="preset-pill" data-duration="custom" id="presetCustom">
+                <i data-lucide="sliders"></i>
+                <span>Custom Timeline</span>
+              </button>
+            </div>
+
+            <!-- INTERACTIVE TIMELINE SCRUBBER -->
+            <div class="timeline-container">
+              <div class="timeline-header">
+                <div class="time-marker-col">
+                  <span class="marker-label">START</span>
+                  <input type="text" id="inputStartTime" class="time-input" value="00:00.0" readonly>
+                </div>
+
+                <div class="timeline-status-center">
+                  <span class="timeline-indicator-text" id="timelineIndicatorText">
+                    Drag handles or click anywhere on the waveform to reposition clip
+                  </span>
+                </div>
+
+                <div class="time-marker-col align-right">
+                  <span class="marker-label">END</span>
+                  <input type="text" id="inputEndTime" class="time-input" value="00:15.0" readonly>
+                </div>
+              </div>
+
+              <!-- Draggable Timeline Track -->
+              <div class="timeline-track-wrapper" id="timelineTrackWrapper">
+                <!-- Audio Waveform Visualization Simulation -->
+                <div class="waveform-canvas-container" id="waveformContainer"></div>
+
+                <!-- Selected Highlight Window -->
+                <div class="timeline-selection-range" id="timelineSelectionRange">
+                  <div class="range-handle handle-left" id="handleLeft" title="Drag Start Point">
+                    <div class="handle-bar"></div>
+                    <span class="handle-tag" id="handleLeftTag">00:00</span>
+                  </div>
+                  <div class="range-center-drag" id="rangeCenterDrag" title="Drag to move entire clip window">
+                    <i data-lucide="grip-vertical"></i>
+                  </div>
+                  <div class="range-handle handle-right" id="handleRight" title="Drag End Point">
+                    <div class="handle-bar"></div>
+                    <span class="handle-tag" id="handleRightTag">00:15</span>
+                  </div>
+                </div>
+
+                <!-- Active Playhead -->
+                <div class="timeline-playhead" id="timelinePlayhead"></div>
+              </div>
+
+              <div class="timeline-footer-info">
+                <button class="btn-text-sm" id="btnPreviewClipRange">
+                  <i data-lucide="play-circle"></i> Preview This Clip
+                </button>
+                <span class="hint-text">Original Quality Mode: Lossless Frame Capture Active</span>
+              </div>
+            </div>
+
+            <!-- EXPORT ACTION BUTTONS -->
+            <div class="clipper-actions-bar">
+              <div class="action-buttons-group">
+                <button class="btn-gradient-lg" id="btnGenerateClip">
+                  <i data-lucide="scissors"></i>
+                  <span>Cut & Save Clip</span>
+                </button>
+                <button class="btn-outline-lg" id="btnAutoSplitAll">
+                  <i data-lucide="layers"></i>
+                  <span>Auto-Split Entire Video (<span id="autoSplitDurationText">15s</span>)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Slicing Progress Box (Hidden until clipping) -->
+            <div class="slicing-progress-box" id="slicingProgressBox" style="display: none;">
+              <div class="slicing-header">
+                <div class="spinner-neon"></div>
+                <div>
+                  <h4 class="slicing-title" id="slicingTitle">Processing High-Quality Clip...</h4>
+                  <p class="slicing-sub" id="slicingSub">Capturing original resolution video frames</p>
+                </div>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="slicingProgressFill"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: GENERATED CLIPS GALLERY -->
+    <section class="tab-pane" id="paneGallery">
+      <div class="gallery-container glass-panel">
+        <div class="gallery-header">
+          <div>
+            <h2 class="gallery-title">Your Generated Clips</h2>
+            <p class="gallery-sub">All clips rendered in original quality with zero compression loss and normal 1.0x playback speed.</p>
+          </div>
+          <div class="gallery-actions">
+            <button class="btn-gradient" id="btnDownloadZip" disabled>
+              <i data-lucide="archive"></i>
+              <span>Download All as ZIP</span>
+              <span class="download-lock-badge"><i data-lucide="lock"></i></span>
+            </button>
+            <button class="btn-primary" id="btnDownloadAllClips" disabled>
+              <i data-lucide="download-cloud"></i>
+              <span>Download All</span>
+              <span class="download-lock-badge"><i data-lucide="lock"></i></span>
+            </button>
+            <button class="btn-outline" id="btnClearGallery" disabled>
+              <i data-lucide="trash-2"></i>
+              <span>Clear</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="gallery-empty-state" id="galleryEmptyState">
+          <div class="empty-icon-circle">
+            <i data-lucide="film"></i>
+          </div>
+          <h3 class="empty-title">No Clips in Gallery</h3>
+          <p class="empty-desc">Create 10s or 15s clips from Clipper Studio, or click below to generate instant test clips!</p>
+          <div class="empty-actions-row">
+            <button class="btn-gradient" id="btnGoToClipper">
+              <i data-lucide="scissors"></i>
+              <span>Open Clipper Studio</span>
+            </button>
+            <button class="btn-primary" id="btnGenerateSampleClips">
+              <i data-lucide="sparkles"></i>
+              <span>⚡ Generate 3 Test Clips</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Clips Grid -->
+        <div class="clips-grid" id="clipsGrid" style="display: none;">
+          <!-- Generated clip cards will appear here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: UPCOMING FEATURES SHOWCASE -->
+    <section class="tab-pane" id="paneUpcoming">
+      <div class="upcoming-container glass-panel">
+        <div class="upcoming-header">
+          <span class="pill-badge glow-purple">
+            <i data-lucide="sparkles"></i> Next-Gen Creator Roadmap
+          </span>
+          <h2 class="upcoming-title">Upcoming AI Tools & <span class="gradient-text">Feature Pipeline</span></h2>
+          <p class="upcoming-sub">Exciting capabilities currently under active development for John Video Clips creators. Cast your vote or preview what's launching next!</p>
+        </div>
+
+        <div class="upcoming-grid">
+          <!-- Feature 1 -->
+          <div class="upcoming-card glass-card">
+            <div class="card-status-badge in-progress">
+              <span class="status-dot"></span> Under Active Development
+            </div>
+            <div class="feature-icon-wrapper cyan">
+              <i data-lucide="cpu"></i>
+            </div>
+            <h3 class="feature-name">AI Viral Hook Detector</h3>
+            <p class="feature-desc">Analyzes speech cadence, emotional inflection, and visual velocity to automatically extract high-retention 3s intro hooks from 60+ minute podcasts and streams.</p>
+            <div class="feature-tags">
+              <span class="feature-tag">Whisper AI</span>
+              <span class="feature-tag">Peak Retention Score</span>
+              <span class="feature-tag">Smart Cuts</span>
+            </div>
+            <div class="feature-meta">
+              <div class="progress-info-small">
+                <span>Status: 75% Complete</span>
+                <div class="mini-bar"><div class="mini-fill" style="width: 75%;"></div></div>
+              </div>
+              <button class="btn-feature-vote" onclick="window.voteUpcomingFeature('AI Viral Hook Detector')">
+                <i data-lucide="thumbs-up"></i> <span>Vote Priority</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="upcoming-card glass-card">
+            <div class="card-status-badge upcoming">
+              <span class="status-dot"></span> Next Sprint
+            </div>
+            <div class="feature-icon-wrapper purple">
+              <i data-lucide="smartphone"></i>
+            </div>
+            <h3 class="feature-name">Face-Tracking 9:16 Auto-Reframe</h3>
+            <p class="feature-desc">Real-time computer vision automatically centers the active speaker in vertical 9:16 aspect ratio with smooth cinematic camera panning for TikTok, Shorts & Reels.</p>
+            <div class="feature-tags">
+              <span class="feature-tag">Smart Crop</span>
+              <span class="feature-tag">Dynamic Panning</span>
+              <span class="feature-tag">Multi-Speaker</span>
+            </div>
+            <div class="feature-meta">
+              <div class="progress-info-small">
+                <span>Status: 60% Complete</span>
+                <div class="mini-bar"><div class="mini-fill" style="width: 60%;"></div></div>
+              </div>
+              <button class="btn-feature-vote" onclick="window.voteUpcomingFeature('AI Viral Hook Detector')">
+                <i data-lucide="thumbs-up"></i> <span>Vote Priority</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="upcoming-card glass-card">
+            <div class="card-status-badge beta">
+              <span class="status-dot"></span> Private Alpha
+            </div>
+            <div class="feature-icon-wrapper pink">
+              <i data-lucide="type"></i>
+            </div>
+            <h3 class="feature-name">Dynamic Animated Captions</h3>
+            <p class="feature-desc">Generates word-by-word animated subtitles in popular creator styles (Hormozi, MrBeast, Neon Glow) with automated emoji insertions and sound effect sync.</p>
+            <div class="feature-tags">
+              <span class="feature-tag">Auto-Transcription</span>
+              <span class="feature-tag">Emoji Sync</span>
+              <span class="feature-tag">Custom Typography</span>
+            </div>
+            <div class="feature-meta">
+              <div class="progress-info-small">
+                <span>Status: 85% Complete</span>
+                <div class="mini-bar"><div class="mini-fill" style="width: 85%;"></div></div>
+              </div>
+              <button class="btn-feature-vote" onclick="window.voteUpcomingFeature('AI Viral Hook Detector')">
+                <i data-lucide="thumbs-up"></i> <span>Vote Priority</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Feature 4 -->
+          <div class="upcoming-card glass-card">
+            <div class="card-status-badge planned">
+              <span class="status-dot"></span> Planned
+            </div>
+            <div class="feature-icon-wrapper green">
+              <i data-lucide="share-2"></i>
+            </div>
+            <h3 class="feature-name">1-Click Multi-Platform Scheduler</h3>
+            <p class="feature-desc">Directly schedule or queue rendered 10s/15s clips to TikTok, Instagram Reels, YouTube Shorts, and X (Twitter) without downloading to local disk.</p>
+            <div class="feature-tags">
+              <span class="feature-tag">Direct API Publish</span>
+              <span class="feature-tag">Hashtag AI</span>
+              <span class="feature-tag">Draft Sync</span>
+            </div>
+            <div class="feature-meta">
+              <div class="progress-info-small">
+                <span>Status: 40% Complete</span>
+                <div class="mini-bar"><div class="mini-fill" style="width: 40%;"></div></div>
+              </div>
+              <button class="btn-feature-vote" onclick="window.voteUpcomingFeature('1-Click Multi-Platform Scheduler')">
+                <i data-lucide="thumbs-up"></i> <span>Vote Priority</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: ADMIN DASHBOARD (Rahan Khan Admin Panel) -->
+    <section class="tab-pane" id="paneAdmin">
+      <div class="admin-dashboard glass-panel">
+        
+        <!-- Admin Header -->
+        <div class="admin-header">
+          <div class="admin-title-group">
+            <span class="pill-badge glow-gold">
+              <i data-lucide="shield-check"></i> System Administrator
+            </span>
+            <h2 class="admin-main-title">Creator Hub <span class="gradient-text">Admin Panel</span></h2>
+            <p class="admin-sub">Logged in as <strong>Rahan Khan</strong> (<code>rahankhan51214786@gmail.com</code>). Monitor daily active users, manage creators, track video clipping analytics.</p>
+          </div>
+          <div class="admin-header-actions">
+            <button class="btn-primary" id="btnOpenAddUserModal">
+              <i data-lucide="user-plus"></i>
+              <span>Add New User</span>
+            </button>
+            <button class="btn-outline" id="btnRefreshAdminData">
+              <i data-lucide="refresh-cw"></i>
+              <span>Refresh Stats</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Metrics Stats Grid -->
+        <div class="admin-stats-grid">
+          <div class="stat-card glass-card">
+            <div class="stat-icon-wrap cyan">
+              <i data-lucide="users"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Total Users</span>
+              <h3 class="stat-value" id="adminTotalUsers">4</h3>
+              <span class="stat-change positive"><i data-lucide="trending-up"></i> +12% this week</span>
+            </div>
+          </div>
+
+          <div class="stat-card glass-card">
+            <div class="stat-icon-wrap purple">
+              <i data-lucide="activity"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Daily Active Users</span>
+              <h3 class="stat-value" id="adminDailyUsers">42</h3>
+              <span class="stat-change positive"><i data-lucide="zap"></i> Live creators active</span>
+            </div>
+          </div>
+
+          <div class="stat-card glass-card">
+            <div class="stat-icon-wrap green">
+              <i data-lucide="user-check"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Signups Today</span>
+              <h3 class="stat-value" id="adminSignupsToday">9</h3>
+              <span class="stat-change positive"><i data-lucide="arrow-up-right"></i> High registration</span>
+            </div>
+          </div>
+
+          <div class="stat-card glass-card">
+            <div class="stat-icon-wrap pink">
+              <i data-lucide="scissors"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Clips Rendered</span>
+              <h3 class="stat-value" id="adminTotalClips">94</h3>
+              <span class="stat-change info" id="adminStorageSaved"><i data-lucide="hard-drive"></i> 1.69 GB saved</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Management Table Section -->
+        <div class="admin-table-container glass-card">
+          <div class="table-header-row">
+            <div>
+              <h3 class="table-title">User Accounts Directory ("New User Add / Show")</h3>
+              <p class="table-sub">Manage registered creators, permissions, and account status.</p>
+            </div>
+            <div class="table-search-box">
+              <i data-lucide="search"></i>
+              <input type="text" id="adminUserSearchInput" placeholder="Search user by name or email...">
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-users-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Clips</th>
+                  <th>Joined</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersTableBody">
+                <!-- Populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Server Video Activity Stream -->
+        <div class="admin-activity-section glass-card">
+          <h3 class="activity-title"><i data-lucide="film"></i> Live Clipping Activity & System Stream</h3>
+          <div class="activity-list" id="adminActivityList">
+            <div class="activity-item">
+              <span class="activity-badge live">CLIP</span>
+              <span class="activity-text"><strong>Rahan Khan</strong> trimmed 15s clip from <em>K-Tool Cookie Viewer Demo</em></span>
+              <span class="activity-time">Just now</span>
+            </div>
+            <div class="activity-item">
+              <span class="activity-badge live">ZIP</span>
+              <span class="activity-text"><strong>Sarah Miller</strong> packaged 4 clips into ZIP bundle</span>
+              <span class="activity-time">3 mins ago</span>
+            </div>
+            <div class="activity-item">
+              <span class="activity-badge">DOWNLOAD</span>
+              <span class="activity-text"><strong>Ali Hassan</strong> downloaded 1080p full video</span>
+              <span class="activity-time">12 mins ago</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Notification System -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Mobile Bottom Sticky Bar for Easy Access -->
+  <div class="mobile-bottom-nav">
+    <button class="mob-nav-item active" data-tab="downloader">
+      <i data-lucide="download-cloud"></i>
+      <span>Download</span>
+    </button>
+    <button class="mob-nav-item" data-tab="clipper">
+      <i data-lucide="scissors"></i>
+      <span>Clip Studio</span>
+    </button>
+    <button class="mob-nav-item" data-tab="gallery">
+      <i data-lucide="sparkles"></i>
+      <span>Gallery</span>
+    </button>
+    <button class="mob-nav-item" data-tab="upcoming">
+      <i data-lucide="rocket"></i>
+      <span>Upcoming</span>
+    </button>
+    <button class="mob-nav-item" data-tab="admin" id="mobTabAdmin" style="display: none;">
+      <i data-lucide="shield-check"></i>
+      <span>Admin</span>
+    </button>
+  </div>
+
+  <!-- Hidden Canvas for Video Processing -->
+  <canvas id="hiddenProcessingCanvas" style="display: none;"></canvas>
+
+  <!-- AUTHENTICATION MODAL (LOGIN & SIGNUP) -->
+  <div class="auth-modal" id="authModal">
+    <div class="auth-modal-backdrop" id="authModalBackdrop"></div>
+    <div class="auth-modal-dialog glass-panel">
+      <button class="auth-modal-close" id="btnCloseAuthModal" title="Close Modal">
+        <i data-lucide="x"></i>
+      </button>
+
+      <div class="auth-modal-header">
+        <div class="auth-brand-icon">
+          <i data-lucide="shield-check"></i>
+        </div>
+        <h3 class="auth-modal-title" id="authModalTitle">Welcome to John Video Clips</h3>
+        <p class="auth-modal-sub" id="authModalSub">Sign in or create an account to unlock video downloads & full features.</p>
+      </div>
+
+      <!-- Tab Switcher (Login / Signup) -->
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="authTabLogin">
+          <i data-lucide="log-in"></i> Sign In
+        </button>
+        <button class="auth-tab-btn" id="authTabRegister">
+          <i data-lucide="user-plus"></i> Create Account
+        </button>
+      </div>
+
+      <!-- Alert Box -->
+      <div class="auth-alert" id="authErrorAlert" style="display: none;"></div>
+
+      <!-- Fast Access Options (Google, Demo, & Admin) -->
+      <div class="auth-quick-actions">
+        <!-- Admin One-Click Login -->
+        <button type="button" class="btn-auth-provider admin-quick" id="btnAdminQuickLogin" title="Login as Rahan Khan (Admin)">
+          <i data-lucide="shield-alert"></i>
+          <span>Login as Admin (rahankhan51214786@gmail.com)</span>
+        </button>
+
+        <button type="button" class="btn-auth-provider google" id="btnGoogleSignIn">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <button type="button" class="btn-auth-provider demo" id="btnDemoLogin">
+          <i data-lucide="zap"></i>
+          <span>Instant One-Click Demo Access</span>
+        </button>
+      </div>
+
+      <div class="auth-divider">
+        <span>OR WITH EMAIL</span>
+      </div>
+
+      <!-- Sign In Form -->
+      <form id="authLoginForm" class="auth-form">
+        <div class="auth-field">
+          <label for="loginEmail">Email Address</label>
+          <div class="auth-input-wrapper">
+            <i data-lucide="mail"></i>
+            <input type="email" id="loginEmail" placeholder="yourname@gmail.com" required autocomplete="email">
+          </div>
+        </div>
+        <div class="auth-field">
+          <label for="loginPassword">Password</label>
+          <div class="auth-input-wrapper">
+            <i data-lucide="lock"></i>
+            <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+        </div>
+        <button type="submit" class="btn-auth-submit">
+          <i data-lucide="log-in"></i>
+          <span>Sign In & Unlock Downloads</span>
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="authRegisterForm" class="auth-form" style="display: none;">
+        <div class="auth-field">
+          <label for="registerName">Full Name</label>
+          <div class="auth-input-wrapper">
+            <i data-lucide="user"></i>
+            <input type="text" id="registerName" placeholder="John Creator" required autocomplete="name">
+          </div>
+        </div>
+        <div class="auth-field">
+          <label for="registerEmail">Email Address</label>
+          <div class="auth-input-wrapper">
+            <i data-lucide="mail"></i>
+            <input type="email" id="registerEmail" placeholder="yourname@gmail.com" required autocomplete="email">
+          </div>
+        </div>
+        <div class="auth-field">
+          <label for="registerPassword">Password (Min 6 Characters)</label>
+          <div class="auth-input-wrapper">
+            <i data-lucide="lock"></i>
+            <input type="password" id="registerPassword" placeholder="••••••••" minlength="6" required autocomplete="new-password">
+          </div>
+        </div>
+        <button type="submit" class="btn-auth-submit">
+          <i data-lucide="user-plus"></i>
+          <span>Create Account & Unlock</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD NEW USER MODAL (ADMIN ONLY) -->
+  <div class="auth-modal" id="addUserModal">
+    <div class="auth-modal-backdrop" id="addUserModalBackdrop"></div>
+    <div class="auth-modal-dialog glass-panel">
+      <button class="auth-modal-close" id="btnCloseAddUserModal" title="Close Modal">
+        <i data-lucide="x"></i>
+      </button>
+      <div class="auth-modal-header">
+        <div class="auth-brand-icon gold">
+          <i data-lucide="user-plus"></i>
+        </div>
+        <h3 class="auth-modal-title">Add New User</h3>
+        <p class="auth-modal-sub">Create a new creator account directly from the admin dashboard.</p>
+      </div>
+      <form id="adminAddUserForm" class="auth-form">
+        <div class="auth-field">
+          <label for="newUserName">Full Name</label>
+          <div class="auth-input-wrapper">
+            <i data-lucide="user"></i>
+            <input type="text" id="newUserName" placeholder="Creator Name" required>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label for="newUserEmail">Email Address</label>
+          <div class="auth-input-wrapper">
+            <i data-lucide="mail"></i>
+            <input type="email" id="newUserEmail" placeholder="creator@example.com" required>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label for="newUserPassword">Password</label>
+          <div class="auth-input-wrapper">
+            <i data-lucide="lock"></i>
+            <input type="password" id="newUserPassword" placeholder="••••••••" required minlength="6">
+          </div>
+        </div>
+        <div class="auth-field">
+          <label for="newUserRole">Account Role</label>
+          <div class="auth-input-wrapper select-wrap">
+            <i data-lucide="shield"></i>
+            <select id="newUserRole">
+              <option value="Creator">Creator</option>
+              <option value="Pro Editor">Pro Editor</option>
+              <option value="Admin">Administrator</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn-auth-submit gold">
+          <i data-lucide="user-plus"></i>
+          <span>Create Account</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs (Official Compat for vanilla web) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="auth.js"></script>
+
+  <!-- Scripts -->
+  <script src="sample_videos.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

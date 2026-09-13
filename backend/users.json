@@ -1,0 +1,42 @@
+[
+  {
+    "id": "usr_admin",
+    "name": "Rahan Khan",
+    "email": "rahankhan51214786@gmail.com",
+    "password": "John@12!",
+    "role": "Admin",
+    "clips_count": 48,
+    "joined": "2026-09-01",
+    "status": "Active"
+  },
+  {
+    "id": "usr_102",
+    "name": "Ali Hassan",
+    "email": "ali.creator@gmail.com",
+    "password": "pass_user_1",
+    "role": "Creator",
+    "clips_count": 14,
+    "joined": "2026-09-10",
+    "status": "Active"
+  },
+  {
+    "id": "usr_103",
+    "name": "Sarah Miller",
+    "email": "sarah.stream@youtube.com",
+    "password": "pass_user_2",
+    "role": "Pro Editor",
+    "clips_count": 29,
+    "joined": "2026-09-11",
+    "status": "Active"
+  },
+  {
+    "id": "usr_104",
+    "name": "Hamza Tariq",
+    "email": "hamza.shorts@tiktok.com",
+    "password": "pass_user_3",
+    "role": "Creator",
+    "clips_count": 8,
+    "joined": "2026-09-12",
+    "status": "Active"
+  }
+]
