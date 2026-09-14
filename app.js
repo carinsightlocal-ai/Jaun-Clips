@@ -166,13 +166,16 @@ document.addEventListener('DOMContentLoaded', () => {
   function switchTab(tabId) {
     if (tabId === 'admin') {
       const isUserAdmin = window.isAdmin && window.isAdmin();
+      const adminLockedView = document.getElementById('adminLockedView');
+      const adminAuthorizedView = document.getElementById('adminAuthorizedView');
       if (!isUserAdmin) {
-        if (window.openAuthModal) {
-          window.openAuthModal('Admin Access Only: Please log in with admin email rahankhan51214786@gmail.com.');
-        }
-        return;
+        if (adminLockedView) adminLockedView.style.display = 'block';
+        if (adminAuthorizedView) adminAuthorizedView.style.display = 'none';
+      } else {
+        if (adminLockedView) adminLockedView.style.display = 'none';
+        if (adminAuthorizedView) adminAuthorizedView.style.display = 'block';
+        if (window.refreshAdminDashboard) window.refreshAdminDashboard();
       }
-      if (window.refreshAdminDashboard) window.refreshAdminDashboard();
     }
 
     state.currentTab = tabId;
@@ -522,8 +525,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // CLIPPER STUDIO MODULE
   // ==========================================
-  // File Upload Handlers
-  btnBrowseFile.addEventListener('click', () => videoFileInput.click());
+  // File Upload Handlers (Stop propagation to prevent double picker click)
+  btnBrowseFile.addEventListener('click', (e) => {
+    e.stopPropagation();
+    videoFileInput.click();
+  });
   uploadDropzone.addEventListener('click', () => videoFileInput.click());
 
   uploadDropzone.addEventListener('dragover', (e) => {
@@ -550,13 +556,24 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   async function handleLocalVideoUpload(file) {
-    if (!file.type.startsWith('video/')) {
-      showToast('Invalid File', 'Please select a valid video file (MP4, WEBM, MOV, MKV)', 'error');
+    if (!file) return;
+
+    // Check extension & mime type (Windows often has empty file.type for MKV/MOV/AVI)
+    const validExtensions = ['.mp4', '.webm', '.mov', '.mkv', '.avi', '.flv', '.m4v', '.3gp', '.ts', '.wmv', '.ogg'];
+    const fileNameLower = (file.name || '').toLowerCase();
+    const hasVideoExt = validExtensions.some(ext => fileNameLower.endsWith(ext));
+    const isVideoType = file.type && file.type.startsWith('video/');
+
+    if (!isVideoType && !hasVideoExt) {
+      showToast('Invalid File', 'Please select a valid video file (MP4, WEBM, MOV, MKV, AVI)', 'error');
       return;
     }
 
     const videoName = file.name.replace(/\.[^/.]+$/, "");
     showToast('Loading Video', `Preparing ${file.name} for Studio...`, 'info');
+
+    // Instant local blob URL
+    const localBlobUrl = URL.createObjectURL(file);
 
     try {
       const formData = new FormData();
@@ -567,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.status === 'success') {
         loadVideoIntoClipper({
           title: data.title || videoName,
-          url: data.video_url,
+          url: data.video_url || localBlobUrl,
           serverPath: data.video_url,
           duration: data.duration,
           isLocal: true,
@@ -581,10 +598,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Fallback to local Object URL
-    const objectUrl = URL.createObjectURL(file);
     loadVideoIntoClipper({
       title: videoName,
-      url: objectUrl,
+      url: localBlobUrl,
       duration: 0,
       isLocal: true,
       file: file,
@@ -601,29 +617,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Load any video (URL or local) into the Clipper Studio
+  // Load any video (URL or local) into the Clipper Studio (Bulletproof with safety timer)
   function loadVideoIntoClipper(videoObj) {
     state.activeVideo = videoObj;
     studioVideoTitle.textContent = videoObj.title;
     studioVideoRes.textContent = videoObj.quality || '1080p Full HD';
 
-    // Set video src
-    mainVideoPlayer.src = videoObj.url;
-    mainVideoPlayer.load();
+    let studioActivated = false;
+    function activateStudio(dur) {
+      if (studioActivated) return;
+      studioActivated = true;
 
-    mainVideoPlayer.onloadedmetadata = () => {
-      const dur = mainVideoPlayer.duration;
-      state.activeVideo.duration = dur;
-      state.activeVideo.width = mainVideoPlayer.videoWidth;
-      state.activeVideo.height = mainVideoPlayer.videoHeight;
-      studioVideoRes.textContent = `${mainVideoPlayer.videoWidth}x${mainVideoPlayer.videoHeight} Original`;
+      const validDur = (typeof dur === 'number' && !isNaN(dur) && dur > 0) ? dur : (videoObj.duration || 30);
+      state.activeVideo.duration = validDur;
+      state.activeVideo.width = mainVideoPlayer.videoWidth || 1920;
+      state.activeVideo.height = mainVideoPlayer.videoHeight || 1080;
+      studioVideoRes.textContent = `${state.activeVideo.width}x${state.activeVideo.height} Original`;
 
-      totalTimeDisplay.textContent = formatTime(dur);
+      totalTimeDisplay.textContent = formatTime(validDur);
       currentTimeDisplay.textContent = '00:00';
 
       // Setup initial clip window
       state.clipStart = 0;
-      const initialSpan = Math.min(15, dur);
+      const initialSpan = Math.min(15, validDur);
       state.clipEnd = initialSpan;
       
       initWaveformVisualizer();
@@ -636,10 +652,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
       switchTab('clipper');
       showToast('Video Loaded in Studio', `Source: ${videoObj.title}`, 'success');
+    }
+
+    // Set video src
+    mainVideoPlayer.src = videoObj.url;
+    mainVideoPlayer.load();
+
+    mainVideoPlayer.onloadedmetadata = () => {
+      activateStudio(mainVideoPlayer.duration);
     };
+
+    if (mainVideoPlayer.readyState >= 1) {
+      activateStudio(mainVideoPlayer.duration);
+    }
+
+    // Safety fallback timer ensures studio is ALWAYS activated without hanging
+    setTimeout(() => {
+      if (!studioActivated) {
+        activateStudio(videoObj.duration || 30);
+      }
+    }, 1200);
 
     mainVideoPlayer.onerror = () => {
       showToast('Playback Notice', 'Using direct stream fallback for video processing', 'info');
+      activateStudio(videoObj.duration || 30);
     };
   }
 
@@ -1744,6 +1780,57 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         showToast('Error', 'Server connection error', 'error');
       }
+    });
+  }
+
+  // Direct Admin Portal Unlock (for public / locked view)
+  const btnSubmitAdminDirectPass = document.getElementById('btnSubmitAdminDirectPass');
+  const adminPortalDirectPass = document.getElementById('adminPortalDirectPass');
+  const adminLockErrorMsg = document.getElementById('adminLockErrorMsg');
+  const adminLockedView = document.getElementById('adminLockedView');
+  const adminAuthorizedView = document.getElementById('adminAuthorizedView');
+
+  function checkAndRenderAdminAccess() {
+    const isAuthAdmin = window.isAdmin && window.isAdmin();
+    if (adminLockedView) adminLockedView.style.display = isAuthAdmin ? 'none' : 'block';
+    if (adminAuthorizedView) adminAuthorizedView.style.display = isAuthAdmin ? 'block' : 'none';
+    if (isAuthAdmin && window.refreshAdminDashboard) {
+      window.refreshAdminDashboard();
+    }
+  }
+
+  function handleAdminDirectUnlock() {
+    if (!adminPortalDirectPass) return;
+    const pass = adminPortalDirectPass.value.trim();
+    if (pass === 'John@12!') {
+      if (adminLockErrorMsg) adminLockErrorMsg.style.display = 'none';
+      adminPortalDirectPass.value = '';
+      const adminUser = {
+        uid: 'usr_admin',
+        email: 'rahankhan51214786@gmail.com',
+        displayName: 'Rahan Khan (Admin)',
+        role: 'admin',
+        photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+      };
+      localStorage.setItem('john_clips_demo_user', JSON.stringify(adminUser));
+      if (window.setLoggedInUser) window.setLoggedInUser(adminUser);
+      checkAndRenderAdminAccess();
+      showToast('Admin Authorized', 'Welcome Administrator Rahan Khan', 'success');
+    } else {
+      if (adminLockErrorMsg) {
+        adminLockErrorMsg.style.display = 'block';
+        adminLockErrorMsg.textContent = 'Invalid administrator password. Access Denied.';
+      }
+      showToast('Security Alert', 'Invalid Admin Password', 'error');
+    }
+  }
+
+  if (btnSubmitAdminDirectPass) {
+    btnSubmitAdminDirectPass.addEventListener('click', handleAdminDirectUnlock);
+  }
+  if (adminPortalDirectPass) {
+    adminPortalDirectPass.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleAdminDirectUnlock();
     });
   }
 

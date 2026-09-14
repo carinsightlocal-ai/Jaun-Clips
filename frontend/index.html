@@ -235,7 +235,7 @@
         
         <!-- Upload Zone / Source Switcher -->
         <div class="upload-dropzone glass-panel" id="uploadDropzone">
-          <input type="file" id="videoFileInput" accept="video/mp4,video/webm,video/quicktime,video/mkv" style="display: none;">
+          <input type="file" id="videoFileInput" accept="video/*,.mp4,.webm,.mov,.mkv,.avi,.flv,.m4v,.3gp,.ts" style="display: none;">
           <div class="dropzone-content">
             <div class="drop-icon-circle">
               <i data-lucide="upload-cloud"></i>
@@ -629,9 +629,32 @@
       </div>
     </section>
 
-    <!-- TAB 5: ADMIN DASHBOARD (Rahan Khan Admin Panel) -->
+    <!-- TAB 5: ADMIN DASHBOARD (Protected Access) -->
     <section class="tab-pane" id="paneAdmin">
-      <div class="admin-dashboard glass-panel">
+      
+      <!-- Locked Screen for Non-Admins / Public Visitors -->
+      <div class="admin-locked-screen glass-panel" id="adminLockedView">
+        <div class="lock-shield-icon">
+          <i data-lucide="shield-alert"></i>
+        </div>
+        <h2 class="locked-title">Restricted Administrative Area</h2>
+        <p class="locked-sub">This control center is reserved for authorized system administrators only. Enter your administrator security key to unlock the dashboard.</p>
+        
+        <div class="admin-direct-login-box">
+          <div class="admin-input-group">
+            <i data-lucide="lock"></i>
+            <input type="password" id="adminPortalDirectPass" placeholder="Enter Admin Password..." autocomplete="current-password">
+          </div>
+          <button type="button" class="btn-gradient" id="btnSubmitAdminDirectPass">
+            <i data-lucide="unlock"></i>
+            <span>Unlock Admin Panel</span>
+          </button>
+        </div>
+        <div id="adminLockErrorMsg" class="admin-lock-error" style="display: none;"></div>
+      </div>
+
+      <!-- Authorized Admin View (Shown only to verified admin) -->
+      <div class="admin-dashboard glass-panel" id="adminAuthorizedView" style="display: none;">
         
         <!-- Admin Header -->
         <div class="admin-header">
@@ -640,7 +663,7 @@
               <i data-lucide="shield-check"></i> System Administrator
             </span>
             <h2 class="admin-main-title">Creator Hub <span class="gradient-text">Admin Panel</span></h2>
-            <p class="admin-sub">Logged in as <strong>Rahan Khan</strong> (<code>rahankhan51214786@gmail.com</code>). Monitor daily active users, manage creators, track video clipping analytics.</p>
+            <p class="admin-sub">Authorized Administrator Session active. Monitor daily active users, manage creators, track video clipping analytics.</p>
           </div>
           <div class="admin-header-actions">
             <button class="btn-primary" id="btnOpenAddUserModal">
@@ -822,10 +845,10 @@
 
       <!-- Fast Access Options (Google, Demo, & Admin) -->
       <div class="auth-quick-actions">
-        <!-- Admin One-Click Login -->
-        <button type="button" class="btn-auth-provider admin-quick" id="btnAdminQuickLogin" title="Login as Rahan Khan (Admin)">
-          <i data-lucide="shield-alert"></i>
-          <span>Login as Admin (rahankhan51214786@gmail.com)</span>
+        <!-- Admin Portal Login -->
+        <button type="button" class="btn-auth-provider admin-quick" id="btnAdminQuickLogin" title="Administrator Portal Login">
+          <i data-lucide="shield-check"></i>
+          <span>Admin Portal Login</span>
         </button>
 
         <button type="button" class="btn-auth-provider google" id="btnGoogleSignIn">

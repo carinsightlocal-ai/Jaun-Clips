@@ -2780,9 +2780,102 @@ button:disabled {
   flex-wrap: wrap;
 }
 
-/* ==========================================================================
-   ADMIN DASHBOARD STYLES
-   ========================================================================== */
+/* Admin Locked Screen (Public / Unauthorized View) */
+.admin-locked-screen {
+  padding: 60px 24px;
+  border-radius: var(--radius-xl);
+  text-align: center;
+  max-width: 560px;
+  margin: 40px auto;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: radial-gradient(circle at top, rgba(239, 68, 68, 0.08) 0%, rgba(15, 23, 42, 0.95) 70%);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(239, 68, 68, 0.1);
+}
+
+.lock-shield-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.lock-shield-icon svg {
+  width: 36px;
+  height: 36px;
+}
+
+.locked-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 8px;
+}
+
+.locked-sub {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
+
+.admin-direct-login-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.admin-input-group {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  padding: 0 14px;
+  transition: all var(--transition-fast);
+}
+
+.admin-input-group:focus-within {
+  border-color: #f87171;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.admin-input-group i,
+.admin-input-group svg {
+  color: var(--text-muted);
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+}
+
+.admin-input-group input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 14px;
+  padding: 12px 0;
+}
+
+.admin-lock-error {
+  margin-top: 14px;
+  color: #f87171;
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
 .admin-dashboard {
   padding: 32px 28px;
   border-radius: var(--radius-xl);

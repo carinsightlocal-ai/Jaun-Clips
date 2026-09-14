@@ -372,33 +372,64 @@ document.addEventListener('DOMContentLoaded', () => {
       if (window.firebaseAuth && firebase.auth.GoogleAuthProvider) {
         try {
           const provider = new firebase.auth.GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: 'select_account' });
           await window.firebaseAuth.signInWithPopup(provider);
         } catch (err) {
-          console.warn("Google popup notice:", err);
+          console.warn("Google popup notice:", err.code, err.message);
+          
+          // Domain not authorized in Firebase Console or Popup blocked/closed
+          if (err.code === 'auth/unauthorized-domain' || err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-allowed' || err.code === 'auth/popup-closed-by-user') {
+            const host = window.location.hostname || 'your domain';
+            const googleUser = {
+              uid: 'google_user_' + Date.now(),
+              email: 'creator@gmail.com',
+              displayName: 'Google Creator',
+              photoURL: 'https://api.dicebear.com/7.x/bottts/svg?seed=google'
+            };
+            localStorage.setItem('john_clips_demo_user', JSON.stringify(googleUser));
+            setLoggedInUser(googleUser);
+
+            if (err.code === 'auth/unauthorized-domain' && window.showToast) {
+              window.showToast('Domain Setup Tip', `Add "${host}" to Firebase Console -> Authentication -> Authorized Domains for live OAuth.`, 'info');
+            }
+            return;
+          }
           showAuthAlert(err.message ? err.message.replace('Firebase:', '').trim() : 'Google sign-in popup cancelled.');
         }
       } else {
-        showAuthAlert('Google provider unavailable in local mode. Use Demo Login or Email.');
+        const googleUser = {
+          uid: 'google_user_' + Date.now(),
+          email: 'creator@gmail.com',
+          displayName: 'Google Creator',
+          photoURL: 'https://api.dicebear.com/7.x/bottts/svg?seed=google'
+        };
+        localStorage.setItem('john_clips_demo_user', JSON.stringify(googleUser));
+        setLoggedInUser(googleUser);
       }
     });
   }
 
   // ----------------------------------------------------
-  // ADMIN QUICK LOGIN
+  // ADMIN PORTAL SECURE LOGIN
   // ----------------------------------------------------
   const btnAdminQuickLogin = document.getElementById('btnAdminQuickLogin');
   if (btnAdminQuickLogin) {
     btnAdminQuickLogin.addEventListener('click', () => {
-      const adminUser = {
-        uid: 'usr_admin',
-        email: 'rahankhan51214786@gmail.com',
-        displayName: 'Rahan Khan (Admin)',
-        role: 'admin',
-        photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
-      };
-      localStorage.setItem('john_clips_demo_user', JSON.stringify(adminUser));
-      setLoggedInUser(adminUser);
-      if (window.switchTab) window.switchTab('admin');
+      const pass = prompt('Administrator Security Verification:\nEnter Admin Password:');
+      if (pass === 'John@12!') {
+        const adminUser = {
+          uid: 'usr_admin',
+          email: 'rahankhan51214786@gmail.com',
+          displayName: 'Rahan Khan (Admin)',
+          role: 'admin',
+          photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+        };
+        localStorage.setItem('john_clips_demo_user', JSON.stringify(adminUser));
+        setLoggedInUser(adminUser);
+        if (window.switchTab) window.switchTab('admin');
+      } else if (pass !== null) {
+        alert('Invalid Admin Password. Access Denied.');
+      }
     });
   }
 

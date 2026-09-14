@@ -77,24 +77,6 @@ def serve_index():
         return send_from_directory(FRONTEND_DIR, 'index.html')
     return send_from_directory(PROJECT_ROOT, 'index.html')
 
-@app.route('/<path:path>')
-def serve_static(path):
-    # 1. Check frontend directory (HTML, CSS, JS, Images)
-    f_path = os.path.join(FRONTEND_DIR, path)
-    if os.path.exists(f_path):
-        return send_from_directory(FRONTEND_DIR, path)
-
-    # 2. Check backend directory (Samples, Clips, Uploads)
-    b_path = os.path.join(BACKEND_DIR, path)
-    if os.path.exists(b_path):
-        return send_from_directory(BACKEND_DIR, path)
-
-    # 3. Check project root directory
-    r_path = os.path.join(PROJECT_ROOT, path)
-    if os.path.exists(r_path):
-        return send_from_directory(PROJECT_ROOT, path)
-
-    return "File not found", 404
 
 @app.route('/api/upload', methods=['POST'])
 def handle_upload():
@@ -391,6 +373,29 @@ def handle_single_user(user_id):
                 save_users(users)
                 return jsonify({'status': 'success', 'status_new': u['status'], 'message': f"User marked {u['status']}"})
         return jsonify({'status': 'error', 'message': 'User not found'}), 404
+
+@app.route('/api/health')
+def api_health():
+    return jsonify({'status': 'ok', 'service': 'John Video Clips Engine'})
+
+@app.route('/<path:path>')
+def serve_static(path):
+    # 1. Check frontend directory (HTML, CSS, JS, Images)
+    f_path = os.path.join(FRONTEND_DIR, path)
+    if os.path.exists(f_path):
+        return send_from_directory(FRONTEND_DIR, path)
+
+    # 2. Check backend directory (Samples, Clips, Uploads)
+    b_path = os.path.join(BACKEND_DIR, path)
+    if os.path.exists(b_path):
+        return send_from_directory(BACKEND_DIR, path)
+
+    # 3. Check project root directory
+    r_path = os.path.join(PROJECT_ROOT, path)
+    if os.path.exists(r_path):
+        return send_from_directory(PROJECT_ROOT, path)
+
+    return "File not found", 404
 
 if __name__ == '__main__':
     print(f"Starting John Video Clips & Downloading Engine on port 8080...")
